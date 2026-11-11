@@ -24,13 +24,24 @@ Every application is saved and shown on a staff dashboard at `/applications/`.
 3. Open **Project Settings > API**. Copy the **Project URL** and the **anon / publishable key**.
 4. In `config.js`, paste them into `supabaseUrl` and `supabaseKey`, commit.
 
+## Application types (Moderator, Creator, Event Host, Partnership)
+
+The application page now opens on a picker. Each type has its own questions, requirements and confirm text, all in
+`window.WM_CONFIG.types` at the bottom of `config.js`. The Moderator type still uses the original `questions`.
+Direct links: `/?type=mod`, `/?type=creator`, `/?type=events`, `/?type=partner`.
+To add a type, copy a block (the first question must always be the Discord name). `open: false` closes just that type.
+Set `discordWebhook` inside a type to send it to its own Discord channel.
+
+**If you already set Supabase up, run the new `supabase.sql` again.** It adds the `type` column and a new staff login.
+The dashboard will not work until you do. The dashboard has a type filter and shows the type on every application.
+
 ## Staff login
 
 Open `/applications/` and type the username **macstaff**. No password.
 
 The username is checked by the database, not by the website, so it isn't visible in your page source and
-nobody can read applications without it. To change it, edit `'macstaff'` in `supabase.sql` and run the file
-again. Keep in mind it works like a shared password: anyone you tell it to can read applications, and it
+nobody can read applications without it. To change it, edit `'macstaff'` (it appears once) in `supabase.sql` and run
+the file again. Keep in mind it works like a shared password: anyone you tell it to can read applications, and it
 isn't rate limited, so pick something hard to guess if the applications are sensitive.
 
 ## Step 3: Discord alerts (optional)
@@ -50,10 +61,23 @@ dot. There are no accept / deny buttons; it's read-only.
 
 ## Closing applications
 
-Set `applicationsOpen: false` in `config.js`.
+Easiest: log in to `/applications/`, press **Open / close**, and click the switch for any type. It takes effect
+immediately and is enforced by the database too (needs the latest `supabase.sql`).
+In `config.js`: `applicationsOpen: false` closes everything, `open: false` on a type closes just that one.
 
 ## Good to know
 
 - `config.js` is public. The Supabase key in it only allows submitting applications; reading needs the staff
   username. A determined person could still submit junk applications. If that happens, regenerate the key.
 - Discord webhook URLs in `config.js` are public too. If the channel gets spammed, delete the webhook and make a new one.
+
+## Icons
+
+Each type has a white icon (`WM_CONFIG.icons` in `config.js`). To use your own, add `icon: "https://link-to-image"` to a type.
+The image is turned white automatically.
+
+## Troubleshooting Supabase
+
+The pages now show the real error. "HTTP 404" means `supabase.sql` wasn't run (or run it again). "401/403" means the
+URL/key don't match the project. "Failed to fetch" usually means the Supabase project is paused (free projects pause
+after about a week idle: open the Supabase dashboard and click Restore) or the URL is wrong.
