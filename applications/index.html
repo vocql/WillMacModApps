@@ -21,6 +21,8 @@ button{cursor:pointer;border:1px solid var(--border);background:rgba(30,16,56,.8
 button:hover:not(:disabled){border-color:var(--pink)}
 button:disabled{opacity:.5;cursor:default}
 a{color:inherit}
+a.btn{display:inline-block;border:1px solid var(--border);background:rgba(30,16,56,.85);border-radius:10px;padding:8px 14px;font-weight:500;text-decoration:none;transition:.15s}
+a.btn:hover{border-color:var(--pink)}
 :focus-visible{outline:2px solid var(--pink2);outline-offset:2px}
 [hidden]{display:none!important}
 
@@ -127,8 +129,6 @@ h1 span{color:var(--pink)}
   .qas{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-a.btn{display:inline-block;border:1px solid var(--border);background:rgba(30,16,56,.85);border-radius:10px;padding:8px 14px;font-weight:500;text-decoration:none;transition:.15s}
-a.btn:hover{border-color:var(--pink)}
 </style>
 </head>
 <body>
@@ -158,7 +158,7 @@ a.btn:hover{border-color:var(--pink)}
     <button id="refresh" type="button">Refresh</button>
     <button id="manage" type="button">Open / close</button>
     <button id="rev" type="button">Review</button>
-    <a class="btn" href="https://vocql.github.io/WillMacModApps/">Home</a>    
+    <a class="btn" href="https://vocql.github.io/WillMacModApps/">Home</a>
     <button id="logout" type="button">Log out</button>
   </header>
 
@@ -245,7 +245,7 @@ function el(tag, attrs = {}, ...kids) {
   return n;
 }
 let tt;
-function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 2500); }
+function toast(msg, ms) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, ms || 2500); }
 function ago(ts) {
   const m = Math.floor((Date.now() - ts) / 60000);
   if (m < 1) return "just now"; if (m < 60) return m + "m ago";
@@ -393,23 +393,23 @@ async function setStatus(status) {
   if (!ids.length) return;
   try {
     const n = await rpc("set_application_status", staff, { p_ids: ids, p_status: status });
-    if (typeof n !== "number" || n < 0) throw 0;
+    if (typeof n !== "number" || n < 0) throw new Error("server returned " + JSON.stringify(n));
     apps.forEach(a => { if (picked.has(a.id)) a.status = status; });
     toast(n + " " + status);
     picked.clear(); delArm = false; render(); renderRev();
-  } catch (e) { toast("Couldn't update. Did you run the new supabase.sql?"); }
+  } catch (e) { toast("Couldn't update: " + (e && e.message || e), 9000); }
 }
 async function deleteSelected() {
   if (!delArm) { delArm = true; renderRevFoot(); return; }
   const ids = [...picked].map(String);
   try {
     const n = await rpc("delete_applications", staff, { p_ids: ids });
-    if (typeof n !== "number" || n < 0) throw 0;
+    if (typeof n !== "number" || n < 0) throw new Error("server returned " + JSON.stringify(n));
     apps = apps.filter(a => !picked.has(a.id));
     if (picked.has(sel)) sel = null;
     toast("Deleted " + n);
     picked.clear(); delArm = false; render(); renderRev();
-  } catch (e) { toast("Couldn't delete. Did you run the new supabase.sql?"); }
+  } catch (e) { toast("Couldn't delete: " + (e && e.message || e), 9000); }
 }
 const closeRev = () => { $("#revModal").hidden = true; };
 $("#rev").onclick = () => { rq = ""; rf = "all"; picked.clear(); delArm = false; $("#revSearch").value = ""; $("#revFilter").value = "all"; $("#revModal").hidden = false; renderRev(); $("#revSearch").focus(); };
@@ -422,21 +422,6 @@ $("#revAll").addEventListener("change", e => { revVisible().forEach(a => e.targe
 $("#revOk").onclick = () => setStatus("approved");
 $("#revNo").onclick = () => setStatus("denied");
 $("#revDel").onclick = deleteSelected;
-
-/* ---------- csv ---------- */
-$("#csv").onclick = () => {
-  if (!apps.length) return toast("Nothing to export yet");
-  const safe = v => { v = String(v ?? "").replace(/\r?\n/g, " "); if (/^[=+\-@\t]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
-  const list = visible(); if (!list.length) return toast("Nothing to export yet");
-  const one = ftype !== "all" && T.find(t => t.id === ftype);
-  const n = one ? one.questions.length : Math.max(...list.map(a => a.answers.length));
-  const head = ["Submitted", "Type", "Status", "Discord name", ...Array.from({ length: n }, (_, i) => one ? label(i, { type: ftype }) : "Answer " + (i + 1))];
-  const rows = list.map(a => [new Date(a.at).toISOString(), tOf(a).title, a.status || "pending", a.name, ...Array.from({ length: n }, (_, i) => a.answers[i] || "")]);
-  const csv = [head, ...rows].map(r => r.map(safe).join(",")).join("\r\n");
-  const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv" }));
-  const link = el("a", { href: url, download: "willmac-applications.csv" }); document.body.append(link); link.click(); link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
 
 /* ---------- wiring ---------- */
 $("#search").addEventListener("input", e => { query = e.target.value; render(); });
