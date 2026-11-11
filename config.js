@@ -33,8 +33,16 @@ window.WM_CONFIG = {
   background: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/96kvVB.jpg",
   staff: [
     { name: "Will Mac", role: "Owner", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/p6IK2p.webp" },
+    { name: "Debug.exe", role: "Co-Owner", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/fu02p0.webp" },
     { name: "Voqcl", role: "Admin", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/jQl2KH.png" },
-    { name: "MYGUYVR", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/3mcWjr.webp" }
+    { name: "Kelpie", role: "Lead Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/K1uxkp.webp" },
+    { name: "Spizike", role: "Lead Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/1BPOl7.webp" },
+    { name: "Myguyvr", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/3mcWjr.webp" },
+    { name: "Dean", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/uZC5kf.webp" },
+    { name: "Khxal", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/sg4sJp.webp" },
+    { name: "Chrxmio", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/4tUobL.webp" },
+    { name: "TyriusTheVA", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/JPda0S.webp" },
+    { name: "LilSkeptrim", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/iN1Hni.webp" },
   ],
 
   faq: [
