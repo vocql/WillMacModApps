@@ -102,7 +102,7 @@ window.WM_CONFIG.types = [
   },
   {
     id: "creator", title: "Creator", open: true, verb: "Apply as a creator",
-    blurb: "Make GTA VI / Will Mac content? Get a creator role and a spotlight.",
+    blurb: "Create GTA VI content? Apply for the Creator role to get recognized, featured, and have your content spotlighted in the community!",
     lead: "Do you make videos, streams or clips? Apply for the Creator role and get your content shown to the community.",
     note: "You must own the channel you submit. Re-uploads and clip-farm accounts will not be accepted.",
     confirm: "I confirm I own the channel(s) I submitted and that everything I wrote is true.",
