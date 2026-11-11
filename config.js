@@ -4,7 +4,7 @@ window.WM_CONFIG = {
   // ---- 1) Saving applications (powers the /applications dashboard) ----
   // Free Supabase project. See README.md, "Step 2". Paste both values from
   // Supabase > Project Settings > API (Project URL and the anon / publishable key).
-  supabaseUrl: "https://czhiiemivswifybhfuxr.supabase.co",
+  supabaseUrl: "https://czhiiemivswifybhfuxr.supabase.co/rest/v1/",
   supabaseKey: "sb_publishable_Lef9q2NJeJbyjdBzOY46Nw_QrZGgTd7",
 
   // ---- 2) Discord alert (optional but recommended) ----
