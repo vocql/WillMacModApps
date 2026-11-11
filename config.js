@@ -1,3 +1,14 @@
+// ==========================================================================
+//  TURN APPLICATIONS ON / OFF  (just change true / false, then commit)
+//    true  = open        false = closed (card is greyed out, can't be clicked)
+// ==========================================================================
+window.WM_OPEN = {
+  mod:     true,   // Moderator
+  creator: true,   // Creator
+  events:  true,   // Event Host
+  partner: false    // Partnership
+};
+
 // ============ EDIT THIS FILE ============
 // Everything on the site comes from here. After editing, commit the change on GitHub.
 window.WM_CONFIG = {
@@ -163,3 +174,8 @@ window.WM_CONFIG.types = [
     partner: svg('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>')
   };
 })();
+
+// ---- Apply the on/off list at the top of this file (leave this alone) ----
+window.WM_CONFIG.types.forEach(function (t) {
+  if (t.id in window.WM_OPEN) t.open = !!window.WM_OPEN[t.id];
+});
