@@ -69,6 +69,8 @@ h1 span{color:var(--pink)}
 .item .dot{width:8px;height:8px;border-radius:50%;background:var(--pink);box-shadow:0 0 8px var(--pink);flex:none}
 .item .tm{font-size:.76rem;color:var(--muted);flex:none}
 .item .tag{display:inline-block;margin-right:6px;padding:0 7px;border-radius:999px;font-size:.68rem;font-weight:600;color:var(--pink2);border:1px solid var(--border)}
+.tag.st-approved{color:var(--ok);border-color:var(--ok)}
+.tag.st-denied{color:var(--bad);border-color:var(--bad)}
 .mng{flex:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;padding:12px;border:1px solid var(--border);border-radius:14px;background:rgba(22,10,44,.76)}
 .mng[hidden]{display:none}
 .mrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(10,4,24,.5)}
@@ -92,7 +94,24 @@ h1 span{color:var(--pink)}
 .empty{display:grid;place-items:center;text-align:center;color:var(--muted);padding:40px 20px;height:100%}
 .empty b{display:block;color:var(--text);font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:6px}
 .empty code{background:rgba(255,255,255,.08);padding:1px 6px;border-radius:6px;font-size:.85em}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(30,16,56,.97);border:1px solid var(--border);padding:10px 18px;border-radius:10px;z-index:20;font-size:.9rem}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(30,16,56,.97);border:1px solid var(--border);padding:10px 18px;border-radius:10px;z-index:40;font-size:.9rem}
+
+/* review popup */
+.modal{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:16px;background:rgba(8,3,20,.7);backdrop-filter:blur(4px)}
+.modal .box{width:100%;max-width:520px;max-height:85vh;max-height:85dvh;display:flex;flex-direction:column;gap:10px;border:1px solid var(--border);border-radius:18px;padding:18px;background:rgba(22,10,44,.97)}
+.modal .mh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.modal h3{font-family:'Syne',sans-serif;font-size:1.2rem}
+.rtools{display:flex;gap:8px}
+.rtools input{flex:1;min-width:0;background:rgba(10,4,24,.75);border:1px solid var(--border);border-radius:10px;padding:10px 12px;outline:none}
+.rtools input:focus{border-color:var(--pink)}
+.rtools select{background:rgba(10,4,24,.85);border:1px solid var(--border);border-radius:10px;padding:9px 10px}
+.selall{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);cursor:pointer}
+.modal input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);flex:none;cursor:pointer}
+.dlist{overflow:auto;display:flex;flex-direction:column;gap:6px;min-height:120px}
+.rrow{cursor:pointer}
+.rrow:has(input:checked){border-color:var(--pink);background:rgba(255,79,184,.12)}
+.rfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rfoot #revCount{font-size:.85rem;color:var(--muted)}
 
 @media(max-width:820px){
   .shell{padding:10px 12px;gap:8px}
@@ -136,6 +155,7 @@ h1 span{color:var(--pink)}
     <span class="live" id="live"></span>
     <button id="refresh" type="button">Refresh</button>
     <button id="manage" type="button">Open / close</button>
+    <button id="rev" type="button">Review</button>
     <button id="csv" type="button">Export CSV</button>
     <button id="logout" type="button">Log out</button>
   </header>
@@ -154,6 +174,30 @@ h1 span{color:var(--pink)}
     <article class="detail" id="detail" aria-live="polite"></article>
   </div>
 </div>
+
+<!-- Review popup -->
+<div class="modal" id="revModal" hidden>
+  <div class="box" role="dialog" aria-modal="true" aria-label="Review applications">
+    <div class="mh"><h3>Review applications</h3><button id="revClose" type="button">Close</button></div>
+    <div class="rtools">
+      <input type="search" id="revSearch" placeholder="Search by name" aria-label="Search by name" autocomplete="off">
+      <select id="revFilter" aria-label="Filter by status">
+        <option value="all">All</option><option value="pending">Pending</option>
+        <option value="approved">Approved</option><option value="denied">Denied</option>
+      </select>
+    </div>
+    <label class="selall"><input type="checkbox" id="revAll"> Select all shown</label>
+    <div class="dlist" id="revList"></div>
+    <div class="rfoot">
+      <span id="revCount">0 selected</span>
+      <span class="sp"></span>
+      <button class="tg" id="revOk" type="button">Approve</button>
+      <button class="tg off" id="revNo" type="button">Deny</button>
+      <button class="tg off" id="revDel" type="button">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script src="../config.js"></script>
@@ -216,7 +260,7 @@ function showLogin(msg) {
   $("#loginErr").textContent = msg || ""; $("#user").focus();
 }
 function showDash() { $("#loginView").hidden = true; $("#dashView").hidden = false; loaded = false; render(); fetchApps(true); }
-function logout() { staff = ""; store.del("wm-staff"); apps = []; sel = null; $("#user").value = ""; showLogin(); }
+function logout() { staff = ""; store.del("wm-staff"); apps = []; sel = null; $("#user").value = ""; $("#revModal").hidden = true; showLogin(); }
 
 $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -237,12 +281,13 @@ async function fetchApps(quiet) {
   try {
     if (!(await check(staff))) return logout();
     const rows = await rpc("list_applications", staff);
-    apps = rows.map(a => ({ id: a.id, at: Date.parse(a.created_at), name: a.discord_name, type: a.type || "mod", answers: Array.isArray(a.answers) ? a.answers.map(String) : [] }));
+    apps = rows.map(a => ({ id: a.id, at: Date.parse(a.created_at), name: a.discord_name, type: a.type || "mod", status: a.status || "pending", answers: Array.isArray(a.answers) ? a.answers.map(String) : [] }));
     error = ""; errMsg = "";
     $("#live").replaceChildren(el("i"), "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
     if (quiet !== true) toast("Refreshed");
   } catch (e) { error = "load"; errMsg = e.message; }
   loaded = true; render();
+  if (!$("#revModal").hidden) { const ids = new Set(apps.map(a => a.id)); picked.forEach(id => { if (!ids.has(id)) picked.delete(id); }); renderRev(); }
 }
 
 /* ---------- render ---------- */
@@ -278,7 +323,7 @@ function item(a) {
   return el("button", { class: "item" + (a.id === sel ? " sel" : ""), type: "button", onclick: () => open(a.id) },
     el("div", { class: "r1" }, !seen.has(a.id) ? el("span", { class: "dot", title: "Unread" }) : null,
       el("span", { class: "nm" }, a.name || "Unknown"), el("span", { class: "tm" }, ago(a.at))),
-    el("div", { class: "sn" }, el("b", { class: "tag" }, tOf(a).title), (a.answers[1] || "").replace(/\s+/g, " ")));
+    el("div", { class: "sn" }, el("b", { class: "tag" }, tOf(a).title), a.status && a.status !== "pending" ? el("b", { class: "tag st-" + a.status }, a.status) : null, (a.answers[1] || "").replace(/\s+/g, " ")));
 }
 
 function renderDetail() {
@@ -287,7 +332,7 @@ function renderDetail() {
   d.replaceChildren(
     el("button", { class: "back", type: "button", onclick: () => { sel = null; $("#split").classList.remove("show"); render(); } }, "← All applications"),
     el("div", { class: "dh" }, el("h2", {}, a.name || "Unknown")),
-    el("div", { class: "dmeta" }, tOf(a).title + " application · " + new Date(a.at).toLocaleString() + " · " + ago(a.at)),
+    el("div", { class: "dmeta" }, tOf(a).title + " application · " + (a.status || "pending") + " · " + new Date(a.at).toLocaleString() + " · " + ago(a.at)),
     el("div", { class: "acts" },
       el("button", { type: "button", onclick: () => copy(a.name, "Name copied") }, "Copy name"),
       el("button", { type: "button", onclick: () => copy(a.answers.map((x, i) => label(i, a) + ":\n" + x).join("\n\n"), "Application copied") }, "Copy all")),
@@ -317,6 +362,65 @@ function renderMng() {
 }
 $("#manage").onclick = () => { const m = $("#mng"); m.hidden = !m.hidden; if (!m.hidden) loadClosed(); };
 
+/* ---------- review (select / approve / deny / delete) ---------- */
+let rq = "", rf = "all", picked = new Set(), delArm = false;
+const revVisible = () => {
+  const q = rq.trim().toLowerCase();
+  return apps.filter(a => (rf === "all" || a.status === rf) && (!q || (a.name || "").toLowerCase().includes(q)));
+};
+function renderRevFoot() {
+  const n = picked.size;
+  $("#revCount").textContent = n + " selected";
+  ["#revOk", "#revNo", "#revDel"].forEach(s => $(s).disabled = n === 0);
+  $("#revDel").textContent = delArm ? "Confirm delete (" + n + ")" : "Delete";
+}
+function renderRev() {
+  const v = revVisible();
+  $("#revList").replaceChildren(...(v.length ? v.map(a => {
+    const cb = el("input", { type: "checkbox", "aria-label": "Select " + (a.name || "application") });
+    cb.checked = picked.has(a.id);
+    cb.onchange = () => { cb.checked ? picked.add(a.id) : picked.delete(a.id); delArm = false; renderRev(); };
+    return el("label", { class: "mrow rrow" }, cb,
+      el("div", { class: "nm" }, a.name || "Unknown", el("small", {}, tOf(a).title + " · " + (a.status || "pending") + " · " + ago(a.at))));
+  }) : [el("div", { class: "empty" }, "No matching applications.")]));
+  $("#revAll").checked = v.length > 0 && v.every(a => picked.has(a.id));
+  renderRevFoot();
+}
+async function setStatus(status) {
+  const ids = [...picked].map(String);
+  if (!ids.length) return;
+  try {
+    const n = await rpc("set_application_status", staff, { p_ids: ids, p_status: status });
+    if (typeof n !== "number" || n < 0) throw 0;
+    apps.forEach(a => { if (picked.has(a.id)) a.status = status; });
+    toast(n + " " + status);
+    picked.clear(); delArm = false; render(); renderRev();
+  } catch (e) { toast("Couldn't update. Did you run the new supabase.sql?"); }
+}
+async function deleteSelected() {
+  if (!delArm) { delArm = true; renderRevFoot(); return; }
+  const ids = [...picked].map(String);
+  try {
+    const n = await rpc("delete_applications", staff, { p_ids: ids });
+    if (typeof n !== "number" || n < 0) throw 0;
+    apps = apps.filter(a => !picked.has(a.id));
+    if (picked.has(sel)) sel = null;
+    toast("Deleted " + n);
+    picked.clear(); delArm = false; render(); renderRev();
+  } catch (e) { toast("Couldn't delete. Did you run the new supabase.sql?"); }
+}
+const closeRev = () => { $("#revModal").hidden = true; };
+$("#rev").onclick = () => { rq = ""; rf = "all"; picked.clear(); delArm = false; $("#revSearch").value = ""; $("#revFilter").value = "all"; $("#revModal").hidden = false; renderRev(); $("#revSearch").focus(); };
+$("#revClose").onclick = closeRev;
+$("#revModal").addEventListener("click", e => { if (e.target.id === "revModal") closeRev(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeRev(); });
+$("#revSearch").addEventListener("input", e => { rq = e.target.value; renderRev(); });
+$("#revFilter").addEventListener("change", e => { rf = e.target.value; renderRev(); });
+$("#revAll").addEventListener("change", e => { revVisible().forEach(a => e.target.checked ? picked.add(a.id) : picked.delete(a.id)); delArm = false; renderRev(); });
+$("#revOk").onclick = () => setStatus("approved");
+$("#revNo").onclick = () => setStatus("denied");
+$("#revDel").onclick = deleteSelected;
+
 /* ---------- csv ---------- */
 $("#csv").onclick = () => {
   if (!apps.length) return toast("Nothing to export yet");
@@ -324,10 +428,10 @@ $("#csv").onclick = () => {
   const list = visible(); if (!list.length) return toast("Nothing to export yet");
   const one = ftype !== "all" && T.find(t => t.id === ftype);
   const n = one ? one.questions.length : Math.max(...list.map(a => a.answers.length));
-  const head = ["Submitted", "Type", "Discord name", ...Array.from({ length: n }, (_, i) => one ? label(i, { type: ftype }) : "Answer " + (i + 1))];
-  const rows = list.map(a => [new Date(a.at).toISOString(), tOf(a).title, a.name, ...Array.from({ length: n }, (_, i) => a.answers[i] || "")]);
+  const head = ["Submitted", "Type", "Status", "Discord name", ...Array.from({ length: n }, (_, i) => one ? label(i, { type: ftype }) : "Answer " + (i + 1))];
+  const rows = list.map(a => [new Date(a.at).toISOString(), tOf(a).title, a.status || "pending", a.name, ...Array.from({ length: n }, (_, i) => a.answers[i] || "")]);
   const csv = [head, ...rows].map(r => r.map(safe).join(",")).join("\r\n");
-  const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" }));
+  const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv" }));
   const link = el("a", { href: url, download: "willmac-applications.csv" }); document.body.append(link); link.click(); link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
