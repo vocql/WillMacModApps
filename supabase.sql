@@ -35,7 +35,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select lower(trim(coalesce(staff_key, ''))) = 'macstaff'
+  select lower(trim(coalesce(staff_key, ''))) = 'macstaff-7x4kq'
 $$;
 
 -- On/off switch per application type (staff flip it from the dashboard).
