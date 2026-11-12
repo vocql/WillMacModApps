@@ -57,6 +57,7 @@ window.WM_CONFIG = {
   ],
 
   faq: [
+    ["Why authorize your Discord account?", "Authorization allows you to track your application status and receive updates on its progress."]
     ["Who can apply?", "Any member who has been in the server for 3+ months, has 2FA enabled, and is familiar with how the server runs and is operated."],
     ["Why do I need 2FA?", "Moderators have powerful permissions. Two-factor authentication keeps staff accounts safe from being hijacked."],
     ["What happens after I apply?", "The staff team reviews every application. If you're shortlisted, we'll contact you on Discord, so keep your DMs open."],
