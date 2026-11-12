@@ -358,7 +358,7 @@ async function checkStaff(providerToken, accessToken) {
 }
 const hasStaffKey = () => { try { return !!JSON.parse(localStorage.getItem(STAFF_KEY) || "null"); } catch (e) { return false; } };
 const isStaffNow = () => !!(session && session.staffRole && session.staffUntil > Date.now()) || hasStaffKey();
-const staffLink = () => isStaffNow() ? `<a class="mini" id="dashBtn" href="applications/" style="text-decoration:none">Staff dashboard</a>` : "";
+const staffLink = () => isStaffNow() ? `<button type="button" class="mini" id="dashBtn">Staff dashboard</button>` : "";
 function signOut() {
   try { const k = JSON.parse(localStorage.getItem(STAFF_KEY) || "null"); if (k) { fetch(SB + "/rest/v1/rpc/staff_logout", { method: "POST", headers: { apikey: SK, "Content-Type": "application/json" }, body: JSON.stringify({ staff_key: k }) }).catch(() => {}); localStorage.removeItem(STAFF_KEY); } } catch (e) {}
   session = null; saveSession(); renderAcct();
@@ -458,6 +458,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#mineMo
 $("#viewMine").onclick = openMine;
 renderAcct();
 window.addEventListener("pageshow", renderAcct);
+$("#acct").addEventListener("click", e => { if (e.target.closest("#dashBtn")) location.href = "applications/"; });
 
 /* ---------- info panel ---------- */
 const setReqs = list => $("#reqs").innerHTML = list.map(r => `<li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>${esc(r)}</li>`).join("");
