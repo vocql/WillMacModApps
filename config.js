@@ -34,7 +34,7 @@ window.WM_CONFIG = {
   minAnswerLength: 20,   // minimum characters for the long answers
 
   requirements: [
-    "Must be a member of the server for 3+ months.",
+    "Must be a member of the server for 2-3+ months.",
     "Must have 2FA enabled on your Discord account.",
     "Must be familiar with how the server runs and is operated."
   ],
