@@ -55,6 +55,7 @@ window.WM_CONFIG = {
     { name: "TyriusTheVA", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/JPda0S.webp" },
     { name: "LilSkeptrim", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/iN1Hni.webp" },
     { name: "Tordai", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/dwpdQt.png" },
+    { name: "Tyler Jones", role: "Moderator", img: "https://images.guns.lol/637041cec591a6ab27615f0e2db44d08f3ce0c55/3fAq9X.webp" },
   ],
 
   faq: [
