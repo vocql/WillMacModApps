@@ -217,7 +217,6 @@ details p{padding:0 2px 14px;color:var(--muted);font-size:.88rem}
     <img class="logo" id="logo" alt="Will Mac logo">
     <div><span class="eyebrow">Will Mac Community</span><h1><span id="ttl">Applications</span> <span class="grad" id="state">are now open</span></h1></div>
     <span class="sp"></span>
-    <button type="button" class="mini" id="chgTop" hidden>Change application</button>
     <div class="acct" id="acct"></div>
     <button class="infoBtn" id="infoBtn" type="button">Info</button>
     <div class="status" id="status"><i></i><span>Open</span></div>
@@ -427,8 +426,9 @@ function renderAcctInner() {
     $("#loginTop").onclick = () => openAuth("Log in to see your application status.", openMine);
     return;
   }
-  a.innerHTML = `<span class="who">${session.avatar ? `<img src="${esc(session.avatar)}" alt="">` : ""}<b>${esc(session.name)}</b></span><button type="button" class="mini" id="mineBtn">My applications</button>${staffLink()}<button type="button" class="link" id="outBtn">Log out</button>`;
+  a.innerHTML = `<span class="who">${session.avatar ? `<img src="${esc(session.avatar)}" alt="">` : ""}<b>${esc(session.name)}</b></span><button type="button" class="mini" id="mineBtn">My applications</button><button type="button" class="mini" id="chgTop" hidden>Change application</button>${staffLink()}<button type="button" class="link" id="outBtn">Log out</button>`;
   $("#mineBtn").onclick = openMine;
+  syncChg();
   $("#outBtn").onclick = () => { signOut(); $("#mineModal").hidden = true; };
 }
 
@@ -461,7 +461,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#mineMo
 $("#viewMine").onclick = openMine;
 renderAcct();
 window.addEventListener("pageshow", renderAcct);
-$("#acct").addEventListener("click", e => { if (e.target.closest("#dashBtn")) location.href = "applications/"; });
+$("#acct").addEventListener("click", e => { if (e.target.closest("#dashBtn")) location.href = "applications/"; if (e.target.closest("#chgTop")) showPicker(); });
 
 /* ---------- info panel ---------- */
 const setReqs = list => $("#reqs").innerHTML = list.map(r => `<li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>${esc(r)}</li>`).join("");
@@ -492,8 +492,7 @@ function showPicker() {
 $("#picker").addEventListener("click", e => { const b = e.target.closest(".pcard"); if (b) applyType(T.find(t => t.id === b.dataset.id)); });
 $("#changeType").onclick = showPicker; $("#another").onclick = showPicker; $("#closedBack").onclick = showPicker;
 $("#changeType").style.display = "none";
-$("#chgTop").onclick = showPicker;
-const syncChg = () => { $("#chgTop").hidden = !(cur && T.length > 1); };
+function syncChg() { const b = $("#chgTop"); if (b) b.hidden = !(cur && T.length > 1); }
 
 function applyType(t) {
   if (!t) return showPicker();
