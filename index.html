@@ -181,6 +181,8 @@ details p{padding:0 2px 14px;color:var(--muted);font-size:.88rem}
 .dbtn.sm{padding:7px 14px;font-size:.8rem;box-shadow:none}.dbtn.sm svg{width:16px;height:16px}
 .mini{padding:6px 14px;font-size:.8rem;border:1px solid var(--border);color:var(--pink2)}
 .mini:hover{border-color:var(--pink)}
+#chgTop{white-space:nowrap}
+@media(max-width:760px){.top{flex-wrap:wrap;row-gap:8px}.top .sp{display:none}.top .acct{flex-wrap:wrap;margin-left:auto}.top .mini,.top .dbtn.sm{white-space:nowrap}}
 .who{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted);max-width:170px}
 .who img{width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--pink);flex:none}
 .who b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -215,6 +217,7 @@ details p{padding:0 2px 14px;color:var(--muted);font-size:.88rem}
     <img class="logo" id="logo" alt="Will Mac logo">
     <div><span class="eyebrow">Will Mac Community</span><h1><span id="ttl">Applications</span> <span class="grad" id="state">are now open</span></h1></div>
     <span class="sp"></span>
+    <button type="button" class="mini" id="chgTop" hidden>Change application</button>
     <div class="acct" id="acct"></div>
     <button class="infoBtn" id="infoBtn" type="button">Info</button>
     <div class="status" id="status"><i></i><span>Open</span></div>
@@ -476,7 +479,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") $("#info").c
 /* ---------- picker / type ---------- */
 const isOpen = t => C.applicationsOpen !== false && t.open !== false && !closedDB.has(t.id);
 function showPicker() {
-  cur = null; history.replaceState(null, "", location.pathname);
+  cur = null; syncChg(); history.replaceState(null, "", location.pathname);
   $("#formArea").style.display = "none"; $("#success").classList.remove("on"); $("#closedMsg").classList.remove("on");
   $("#picker").classList.add("on");
   $("#ttl").textContent = "Applications"; $("#state").textContent = "are open";
@@ -488,12 +491,14 @@ function showPicker() {
 }
 $("#picker").addEventListener("click", e => { const b = e.target.closest(".pcard"); if (b) applyType(T.find(t => t.id === b.dataset.id)); });
 $("#changeType").onclick = showPicker; $("#another").onclick = showPicker; $("#closedBack").onclick = showPicker;
-$("#changeType").style.display = T.length > 1 ? "" : "none";
+$("#changeType").style.display = "none";
+$("#chgTop").onclick = showPicker;
+const syncChg = () => { $("#chgTop").hidden = !(cur && T.length > 1); };
 
 function applyType(t) {
   if (!t) return showPicker();
   if (!session) { pendingType = t; openAuth("Log in with Discord to apply for " + t.title + "."); return showPicker(); }
-  cur = t; Q = t.questions; N = Q.length; KEY = "willmac-app-draft-" + t.id; SENT = "willmac-app-sent-" + t.id;
+  cur = t; syncChg(); Q = t.questions; N = Q.length; KEY = "willmac-app-draft-" + t.id; SENT = "willmac-app-sent-" + t.id;
   A = Q.map(() => ""); s = 0; reach = 0; confirmed = false;
   if (T.length > 1) history.replaceState(null, "", "?type=" + encodeURIComponent(t.id));
   $("#picker").classList.remove("on"); $("#success").classList.remove("on");
