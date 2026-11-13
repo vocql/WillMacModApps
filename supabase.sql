@@ -685,25 +685,46 @@ end $$;
 -- ---------------------------------------------------------------
 -- GENERAL FEEDBACK (new): the "Feedback" box on the home page.
 -- Any logged-in member can send a message to staff (no application needed). Their name is always shown.
--- Limit: one message per 10 minutes per person. Shows in the pinned Feedback folder on the dashboard.
+-- Limit: one message per 5 minutes (admins have no limit) per person. Shows in the pinned Feedback folder on the dashboard.
 -- ---------------------------------------------------------------
 alter table public.feedback add column if not exists rl_key text;
 alter table public.feedback drop constraint if exists feedback_outcome_check;
 alter table public.feedback add constraint feedback_outcome_check check (outcome in ('approved','denied','general'));
 
+create index if not exists feedback_rl_key_created_idx on public.feedback (rl_key, created_at desc);
+
+-- Admins have no feedback limit. An admin = the owner, anyone given admin in staff_overrides, or anyone with a live admin staff session
+-- (that session is created automatically when an admin logs in with Discord on the site, and lasts 8 hours).
+create or replace function public.feedback_is_admin(did text)
+returns boolean language sql stable security definer set search_path = public
+as $$
+  select did is not null and (
+    did = '1271246652421701633'
+    or exists (select 1 from public.staff_overrides o where o.discord_id = did and o.access = 'admin')
+    or exists (select 1 from public.staff_sessions s where s.discord_id = did and s.role = 'admin' and s.expires_at > now())
+  )
+$$;
+revoke all on function public.feedback_is_admin(text) from public, anon, authenticated;
+
+-- FIX: the old version used greatest(1, <null>) which returns 1 in Postgres, so a member with NO earlier feedback
+-- was told "wait:1" every time. Now the last message time is read first, and only a real recent message blocks sending.
 create or replace function public.submit_general_feedback(p_message text, p_anonymous boolean)
 returns text language plpgsql security definer set search_path = public
 as $$
-declare did text; m text; r text; nm text; w int;
+declare did text; m text; r text; nm text; last_at timestamptz; w int; adm boolean;
 begin
   did := public.my_discord_id();
   if did is null then return 'login'; end if;
   m := left(trim(coalesce(p_message, '')), 1000);
   if char_length(m) < 5 then return 'short'; end if;
   r := encode(sha256(convert_to('gen:' || did, 'utf8')), 'hex');
-  select greatest(1, ceil(extract(epoch from (max(created_at) + interval '10 minutes' - now())))::int) into w
-    from public.feedback where rl_key = r and created_at > now() - interval '10 minutes';
-  if w is not null then return 'wait:' || w; end if;
+  perform pg_advisory_xact_lock(hashtextextended(r, 0));   -- two taps / two tabs at once can't both get through
+  adm := public.feedback_is_admin(did);
+  select max(created_at) into last_at from public.feedback where rl_key = r;
+  if not adm and last_at is not null and last_at > now() - interval '5 minutes' then
+    w := greatest(1, ceil(extract(epoch from (last_at + interval '5 minutes' - now())))::int);
+    return 'wait:' || w;
+  end if;
   -- Feedback from the home page always shows the member's name (no anonymous option).
   select left(a.discord_name, 100) into nm from public.applications a where a.discord_id = did order by a.created_at desc limit 1;
   nm := coalesce(nm, 'Member');
@@ -714,18 +735,19 @@ begin
 end $$;
 grant execute on function public.submit_general_feedback(text, boolean) to anon, authenticated;
 
--- Seconds left before this member can send more feedback (0 = they can send now). Used for the small timer next to the Send button.
+-- Seconds left before this member can send more feedback (0 = they can send now). Drives the timer next to Send.
 create or replace function public.my_feedback_wait()
 returns int language plpgsql stable security definer set search_path = public
 as $$
-declare did text; r text; w int;
+declare did text; r text; last_at timestamptz;
 begin
   did := public.my_discord_id();
   if did is null then return 0; end if;
+  if public.feedback_is_admin(did) then return 0; end if;
   r := encode(sha256(convert_to('gen:' || did, 'utf8')), 'hex');
-  select greatest(0, ceil(extract(epoch from (max(created_at) + interval '10 minutes' - now())))::int) into w
-    from public.feedback where rl_key = r and created_at > now() - interval '10 minutes';
-  return coalesce(w, 0);
+  select max(created_at) into last_at from public.feedback where rl_key = r;
+  if last_at is null or last_at <= now() - interval '5 minutes' then return 0; end if;
+  return greatest(1, ceil(extract(epoch from (last_at + interval '5 minutes' - now())))::int);
 end $$;
 grant execute on function public.my_feedback_wait() to anon, authenticated;
 notify pgrst, 'reload schema';
