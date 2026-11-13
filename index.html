@@ -308,7 +308,7 @@ details p{padding:0 2px 14px;color:var(--muted);font-size:.88rem}
 .gfb .gmsg{flex:1;min-width:120px;font-size:.84rem}.gfb .gmsg.ok{color:#3ddc97}.gfb .gmsg.bad{color:#ff6b8b}
 .gfb .gsend{margin-left:auto;border:0;border-radius:999px;padding:11px 34px;font-weight:700;font-size:1rem;color:#fff;background:linear-gradient(90deg,#8b5cf6,#ff4fb8);box-shadow:0 6px 22px rgba(255,79,184,.4);cursor:pointer;transition:.15s}
 .gfb .gsend:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1)}.gfb .gsend:disabled{opacity:.55;cursor:default}
-.gfb .gtimer{color:var(--muted);font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}.gfb .gtimer[hidden]{display:none}
+.gfb .gsend{min-width:128px;font-variant-numeric:tabular-nums;white-space:nowrap}.gfb .gsend.cool{background:rgba(255,255,255,.12);box-shadow:none;color:var(--muted);opacity:1}
 .gfb .gl{flex:1;min-width:120px;display:flex;flex-direction:column;gap:3px}.gfb .gnote{color:var(--muted);font-size:.82rem}.gfb .gl .gmsg{flex:none;min-width:0}
 </style>
 </head>
@@ -442,6 +442,7 @@ async function setFromParams(p) {
   session = { access_token: p.access_token, refresh_token: p.refresh_token || "", expires_at: exp, ...u };
   saveSession(); renderAcct();
   if (p.provider_token) checkStaff(p.provider_token, p.access_token);
+  gfbLoad(); paintCool(); await syncCool();   // new login: show THIS member's timer, straight from the database
 }
 
 /* Staff auto-detect: the same Discord login also checks your server roles. Staff get a Dashboard button, no second login.
@@ -464,7 +465,7 @@ const isStaffNow = () => !!(session && session.staffRole && session.staffUntil >
 const staffLink = () => isStaffNow() ? `<button type="button" class="mini" id="dashBtn">Staff dashboard</button>` : "";
 function signOut() {
   try { const k = JSON.parse(localStorage.getItem(STAFF_KEY) || "null"); if (k) { fetch(SB + "/rest/v1/rpc/staff_logout", { method: "POST", headers: { apikey: SK, "Content-Type": "application/json" }, body: JSON.stringify({ staff_key: k }) }).catch(() => {}); localStorage.removeItem(STAFF_KEY); } } catch (e) {}
-  session = null; saveSession(); renderAcct();
+  session = null; saveSession(); renderAcct(); gfbReset();
 }
 async function getToken() {
   if (!session) return null;
@@ -631,61 +632,91 @@ function showPicker() {
   const card = t => `<button type="button" class="pcard${isOpen(t) ? "" : " off"}" data-id="${esc(t.id)}"${isOpen(t) ? "" : " disabled aria-disabled=\"true\""}><span class="pic">${iconOf(t)}</span><b>${esc(t.title)}</b><span>${esc(t.blurb || "")}</span>${isOpen(t) ? "" : "<em>Closed</em>"}</button>`;
   const AP = T.find(t => t.id === "appeal");
   $("#picker").innerHTML = `<h2>What would you like to apply for?</h2><p class="sub">Pick one. Each application has its own questions.</p><div class="pgrid${T.filter(t => t.id !== "appeal").length === 4 ? " two" : ""}">` +
-    T.filter(t => t.id !== "appeal").map(card).join("") + `</div>` + (AP ? `<div class="adiv"><span>Got a punishment you want to appeal?</span></div><div class="pgrid one">${card(AP)}</div>` : "") + `<div class="adiv"><span>Already got a result?</span></div><button type="button" class="fbcard" id="rateRes"><b>Review a result</b><span>Write an honest review of how your application or appeal was handled. Only staff can read it.</span></button><div class="adiv"><span>Got feedback for staff?</span></div><div class="gfb" id="gfb"><div class="gtop"><h3>Feedback</h3><span class="gcnt" id="gfbCnt">0 / 1000</span></div><textarea id="gfbText" maxlength="1000" placeholder="Got an idea, a problem or something to tell staff? Write it here and it goes straight to the staff dashboard."></textarea><div class="gbot"><div class="gl"><span class="gnote">You can send one message every 10 minutes.</span><span class="gmsg" id="gfbMsg"></span></div><span class="gtimer" id="gfbTimer" hidden></span><button type="button" class="gsend" id="gfbSend">Send</button></div></div>`;
+    T.filter(t => t.id !== "appeal").map(card).join("") + `</div>` + (AP ? `<div class="adiv"><span>Got a punishment you want to appeal?</span></div><div class="pgrid one">${card(AP)}</div>` : "") + `<div class="adiv"><span>Already got a result?</span></div><button type="button" class="fbcard" id="rateRes"><b>Review a result</b><span>Write an honest review of how your application or appeal was handled. Only staff can read it.</span></button><div class="adiv"><span>Got feedback for staff?</span></div><div class="gfb" id="gfb"><div class="gtop"><h3>Feedback</h3><span class="gcnt" id="gfbCnt">0 / 1000</span></div><textarea id="gfbText" maxlength="1000" placeholder="Got an idea, a problem or something to tell staff? Write it here and it goes straight to the staff dashboard."></textarea><div class="gbot"><div class="gl"><span class="gnote">You can send one message every 5 minutes.</span><span class="gmsg" id="gfbMsg"></span></div><button type="button" class="gsend" id="gfbSend">Send</button></div></div>`;
   if (0) $("#picker").innerHTML = `` +
     T.map(t => `<button type="button" class="pcard${isOpen(t) ? "" : " off"}" data-id="${esc(t.id)}"${isOpen(t) ? "" : " disabled aria-disabled=\"true\""}><span class="pic">${iconOf(t)}</span><b>${esc(t.title)}</b><span>${esc(t.blurb || "")}</span>${isOpen(t) ? "" : "<em>Closed</em>"}</button>`).join("") + `</div>`;
-  tickCool();
+  gfbRefresh();
   setReqs([]);
   $("#lead").textContent = "Choose an application to see its requirements."; $("#noteTxt").textContent = "Submitting an application does not guarantee acceptance.";
 }
 $("#picker").addEventListener("click", e => { if (e.target.closest("#rateRes")) return openMine(); const b = e.target.closest(".pcard"); if (b) applyType(T.find(t => t.id === b.dataset.id)); });
 
-/* ---------- general feedback (after sending, Send is disabled for 10 minutes with a small timer) ---------- */
-const GFB_MS = 10 * 60 * 1000;
-let gfbUntil = 0, gfbTick = 0;
-try { gfbUntil = Number(localStorage.getItem("wm-gfb-until")) || 0; } catch (x) {}
+/* ---------- general feedback (after sending, the Send button counts down 5:00 to 0:00, then turns back into Send; admins have no limit) ----------
+   The DATABASE is the only source of truth for the cooldown. The browser keeps a hint per Discord account so the timer
+   shows instantly after a reload, but it is always corrected by the server. Logged-out visitors never see a timer. */
+var GFB_MS = 5 * 60 * 1000, GFB_DRAFT = "wm-gfb", gfbUntil = 0, gfbTick = 0, gfbSyncing = null;
+try { localStorage.removeItem("wm-gfb-until"); } catch (x) {}   // old shared key: it leaked one person's timer to the next person
+const gfbKey = () => (session && session.discordId) ? "wm-gfb-until:" + session.discordId : null;
+function gfbStore() { const k = gfbKey(); if (!k) return; try { gfbUntil > Date.now() ? localStorage.setItem(k, String(gfbUntil)) : localStorage.removeItem(k); } catch (x) {} }
+function gfbLoad() {
+  gfbUntil = 0; const k = gfbKey(); if (!k) return;
+  try { const v = Number(localStorage.getItem(k)) || 0, d = v - Date.now(); if (d > 0 && d <= GFB_MS + 5000) gfbUntil = v; else localStorage.removeItem(k); } catch (x) {}
+}
 const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
 function paintCool() {
-  const b = $("#gfbSend"), t = $("#gfbTimer"), left = gfbUntil - Date.now();
+  const b = $("#gfbSend"), left = session ? gfbUntil - Date.now() : 0;
   if (left > 0) {
-    if (b) b.disabled = true; if (t) { t.hidden = false; t.textContent = mmss(left); }
+    if (b) { b.disabled = true; b.classList.add("cool"); b.textContent = mmss(left); }   // the countdown replaces the word "Send"
     if (!gfbTick) gfbTick = setInterval(paintCool, 1000);   // only runs while a cooldown is active
   } else {
-    if (gfbUntil) { gfbUntil = 0; try { localStorage.removeItem("wm-gfb-until"); } catch (x) {} }
+    if (gfbUntil) { gfbUntil = 0; gfbStore(); }
     if (gfbTick) { clearInterval(gfbTick); gfbTick = 0; }
-    if (t) t.hidden = true; if (b && !b.dataset.busy) b.disabled = false;
+    if (b) { b.classList.remove("cool"); if (b.dataset.busy) b.textContent = "Sending…"; else { b.textContent = "Send"; b.disabled = false; } }
   }
 }
 const tickCool = paintCool;
-const setUntil = t => { gfbUntil = t > Date.now() ? t : 0; try { gfbUntil ? localStorage.setItem("wm-gfb-until", String(gfbUntil)) : localStorage.removeItem("wm-gfb-until"); } catch (x) {} paintCool(); };
-async function syncCool() {
-  if (!session) return;
-  try { const tok = await getToken(); if (!tok) return; const r = await fetch(SB + "/rest/v1/rpc/my_feedback_wait", { method: "POST", headers: authHdr(tok), body: "{}", cache: "no-store" }); if (!r.ok) return; const n = await r.json(); if (typeof n === "number") setUntil(n > 0 ? Date.now() + n * 1000 : 0); } catch (x) {}
+function setUntil(t) { gfbUntil = t > Date.now() ? t : 0; gfbStore(); paintCool(); }
+function gfbReset() { gfbUntil = 0; gfbSyncing = null; paintCool(); }   // log out / different account: wipe the timer
+function syncCool() {   // ask the server how long is left, then trust it
+  if (!session) { gfbReset(); return Promise.resolve(); }
+  if (gfbSyncing) return gfbSyncing;
+  const who = session.discordId;
+  return gfbSyncing = (async () => {
+    try {
+      const tok = await getToken(); if (!tok) return;
+      const r = await fetch(SB + "/rest/v1/rpc/my_feedback_wait", { method: "POST", headers: authHdr(tok), body: "{}", cache: "no-store" });
+      if (!r.ok || !session || session.discordId !== who) return;
+      const n = Number(await r.json());
+      if (Number.isFinite(n)) setUntil(n > 0 ? Date.now() + n * 1000 : 0);
+    } catch (x) {} finally { gfbSyncing = null; }
+  })();
 }
-document.addEventListener("input", e => { if (e.target.id === "gfbText") $("#gfbCnt").textContent = e.target.value.length + " / 1000"; });
+const gfbSaveDraft = v => { try { v ? localStorage.setItem(GFB_DRAFT, v) : localStorage.removeItem(GFB_DRAFT); } catch (x) {} };
+function gfbRefresh() {   // runs every time the box is drawn: keeps the draft text and the right timer state
+  try { const d = localStorage.getItem(GFB_DRAFT), t = $("#gfbText"); if (d && t && !t.value) { t.value = d; $("#gfbCnt").textContent = d.length + " / 1000"; } } catch (x) {}
+  paintCool();
+}
+document.addEventListener("input", e => { if (e.target.id === "gfbText") { $("#gfbCnt").textContent = e.target.value.length + " / 1000"; gfbSaveDraft(e.target.value); } });
 document.addEventListener("click", async e => {
-  const btn = e.target.closest("#gfbSend"); if (!btn) return;
-  if (gfbUntil > Date.now()) return;
+  const btn = e.target.closest("#gfbSend"); if (!btn || btn.dataset.busy) return;
   const msg = $("#gfbMsg"), ta = $("#gfbText"), txt = ta.value.trim();
   const say = (t, c) => { msg.textContent = t; msg.className = "gmsg" + (c ? " " + c : ""); };
   if (txt.length < 5) return say("Write a little more first (at least 5 characters).", "bad");
-  if (!session) { try { localStorage.setItem("wm-gfb", txt); } catch (x) {} return openAuth("Log in with Discord to send feedback. Your message will be saved.", () => { const b = $("#gfbSend"); if (b) b.click(); }); }
-  btn.disabled = true; btn.dataset.busy = "1"; say("Sending…");
+  if (!session) { gfbSaveDraft(txt); return openAuth("Log in with Discord to send feedback. Your message will be saved.", () => { const b = $("#gfbSend"); if (b) b.click(); }); }
+  if (gfbUntil > Date.now()) return;
+  btn.disabled = true; btn.dataset.busy = "1"; btn.textContent = "Sending…"; say("Sending…");
   try {
     const tok = await getToken(); if (!tok) throw new Error("Your login expired. Please log in again.");
     const r = await fetch(SB + "/rest/v1/rpc/submit_general_feedback", { method: "POST", headers: authHdr(tok), body: JSON.stringify({ p_message: txt, p_anonymous: false }) });
     if (!r.ok) throw new Error("Couldn't send (HTTP " + r.status + "). Staff need to run the newest supabase.sql.");
     const out = await r.json();
-    if (typeof out === "string" && out.startsWith("wait")) { const n = Number(out.split(":")[1]) || 600; setUntil(Date.now() + n * 1000); say("You already sent feedback. Please wait for the timer.", "bad"); delete btn.dataset.busy; return paintCool(); }
+    if (typeof out === "string" && out.startsWith("wait")) {
+      const n = Number(out.split(":")[1]);
+      delete btn.dataset.busy;
+      if (n > 0) setUntil(Date.now() + n * 1000); else await syncCool();
+      return say("You sent feedback recently. You can send again when the timer ends.", "bad");
+    }
     if (out === "short") throw new Error("Write a little more first (at least 5 characters).");
     if (out === "login") throw new Error("Please log in again.");
     if (out !== "ok") throw new Error("Couldn't send your feedback.");
-    try { localStorage.removeItem("wm-gfb"); } catch (x) {} ta.value = ""; $("#gfbCnt").textContent = "0 / 1000";
-    say("Sent! Thank you, staff can see it now.", "ok"); setUntil(Date.now() + GFB_MS);
+    gfbSaveDraft(""); ta.value = ""; $("#gfbCnt").textContent = "0 / 1000";
+    say("Sent! Thank you, staff can see it now.", "ok");
+    await syncCool();   // the database says how long is left (5:00 for members, 0 for admins)
   } catch (err) { say(err.message, "bad"); }
-  delete btn.dataset.busy; btn.disabled = false; paintCool();
+  finally { delete btn.dataset.busy; btn.disabled = false; paintCool(); }
 });
-window.addEventListener("load", () => { tickCool(); syncCool(); try { const d = localStorage.getItem("wm-gfb"), t = $("#gfbText"); if (d && t && !t.value) { t.value = d; $("#gfbCnt").textContent = d.length + " / 1000"; } } catch (x) {} });
+window.addEventListener("load", () => { gfbLoad(); gfbRefresh(); syncCool(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { paintCool(); syncCool(); } });   // background tabs pause timers
 $("#changeType").onclick = showPicker; $("#another").onclick = showPicker; $("#closedBack").onclick = showPicker;
 $("#changeType").style.display = "none";
 function syncChg() { const b = $("#chgTop"); if (b) b.hidden = !(cur && T.length > 1); }
