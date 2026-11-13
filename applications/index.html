@@ -633,7 +633,7 @@ async function saveProgress(ids, status, reviewer, note) {
   } catch (e) { toast("Couldn't update: " + (e && e.message || e) + " (did you run the new supabase.sql?)", 9000); return false; }
 }
 
-const ORDER = [["creator", "Creators"], ["mod", "Moderators"], ["appeal", "Appeals"], ["events", "Event Host"], ["helper", "Helpers"], ["partner", "Partnership"]];
+const ORDER = [["creator", "Creators"], ["mod", "Moderators"], ["appeal", "Appeals"], ["events", "Event Host"], ["helper", "Helpers"]];
 const gorder = a => { const i = ORDER.findIndex(o => o[0] === a.type); return i < 0 ? 99 : i; };
 const collapsed = new Set();
 const FOLDER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
