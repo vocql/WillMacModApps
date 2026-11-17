@@ -147,7 +147,7 @@ window.WM_CONFIG.types = [
   },
   {
   {
-    id: "ytmod", title: "YouTube Mode", open: true, verb: "Apply as a YouTube moderator",
+    id: "ytmod", title: "YouTube Mod", open: true, verb: "Apply as a YouTube moderator",
     blurb: "Help maintain a safe, welcoming and spoiler-free YouTube chat and comment section.",
     lead: "YouTube Moderators uphold the community guidelines across our live chats and comment sections. They remove spam and spoilers, assist viewers and help keep every stream a positive experience.",
     note: "YouTube Moderators only moderate on YouTube. Reliability, fairness and sound judgment are essential, and the role may be revoked in cases of misconduct or abuse of permissions.",
