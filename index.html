@@ -336,7 +336,6 @@ details p{padding:0 2px 14px;color:var(--muted);font-size:.88rem}
     <div><span class="eyebrow">Will Mac Community</span><h1><span id="ttl">Applications</span> <span class="grad" id="state">are now open</span></h1></div>
     <span class="sp"></span>
     <div class="acct" id="acct"></div>
-    <a class="reportBtn" id="reportBtn" href="report/">Report</a>
     <button class="infoBtn" id="infoBtn" type="button">Info</button>
     <div class="status" id="status"><i></i><span>Open</span></div>
   </div>
@@ -533,20 +532,21 @@ window.addEventListener("message", async e => {
   try { await setFromParams(Object.fromEntries(new URLSearchParams(hs))); } catch (err) { openAuth(err.message); authMsg(err.message, true); }
 })();
 
+const reportLink = `<a class="reportBtn" id="reportBtn" href="report/">Report</a>`;
 function renderAcct() {
   try { renderAcctInner(); } catch (e) {
-    const a = $("#acct"); if (a) a.innerHTML = `<button type="button" class="dbtn sm" id="loginTop">Log in with Discord</button>`;
+    const a = $("#acct"); if (a) a.innerHTML = `<button type="button" class="dbtn sm" id="loginTop">Log in with Discord</button>` + reportLink;
     const b = $("#loginTop"); if (b) b.onclick = () => openAuth("Log in to see your application status.", openMine);
   }
 }
 function renderAcctInner() {
   const a = $("#acct");
   if (!session) {
-    a.innerHTML = `<button type="button" class="dbtn sm" id="loginTop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.5a18.3 18.3 0 0 0-6.4 0L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.6 9 -.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6z"/></svg>Log in with Discord</button>` + staffLink();
+    a.innerHTML = `<button type="button" class="dbtn sm" id="loginTop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.5a18.3 18.3 0 0 0-6.4 0L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.6 9 -.3 13.5.1 18a19.9 19.9 0 0 0 6 3l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.6z"/></svg>Log in with Discord</button>` + staffLink() + reportLink;
     $("#loginTop").onclick = () => openAuth("Log in to see your application status.", openMine);
     return;
   }
-  a.innerHTML = `<span class="who">${session.avatar ? `<img src="${esc(session.avatar)}" alt="">` : ""}<b>${esc(session.name)}</b></span><button type="button" class="mini" id="mineBtn">My applications</button><button type="button" class="mini" id="chgTop" hidden>Change application</button>${staffLink()}<button type="button" class="link" id="outBtn">Log out</button>`;
+  a.innerHTML = `<span class="who">${session.avatar ? `<img src="${esc(session.avatar)}" alt="">` : ""}<b>${esc(session.name)}</b></span><button type="button" class="mini" id="mineBtn">My applications</button><button type="button" class="mini" id="chgTop" hidden>Change application</button>${staffLink()}${reportLink}<button type="button" class="link" id="outBtn">Log out</button>`;
   $("#mineBtn").onclick = openMine;
   syncChg();
   $("#outBtn").onclick = () => { signOut(); $("#mineModal").hidden = true; };
