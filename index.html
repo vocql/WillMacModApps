@@ -126,7 +126,7 @@ input:focus,textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(25
 .note{padding:13px 14px;border-radius:12px;border:1px solid rgba(255,79,184,.6);background:linear-gradient(135deg,rgba(255,79,184,.14),rgba(139,92,246,.1))}
 .note b{display:block;font-family:'Syne',sans-serif;font-size:.85rem;margin-bottom:4px}
 .note p{color:#e6d6f5;font-size:.86rem}
-.staff{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;max-height:min(56vh,460px);overflow-y:auto;padding:4px 6px 4px 2px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--pink) rgba(255,255,255,.06)}.staff::-webkit-scrollbar{width:8px}.staff::-webkit-scrollbar-thumb{background:linear-gradient(var(--pink),var(--violet));border-radius:8px}.staff::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-radius:8px}
+.staff{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px}
 .member{text-align:center;padding:16px 8px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.03);transition:.25s}
 .member:hover{transform:translateY(-4px)}
 .avatar{width:60px;height:60px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:800;color:#2a0a22;background:linear-gradient(135deg,var(--pink2),var(--pink));object-fit:cover;border:2px solid var(--pink)}
@@ -639,15 +639,8 @@ paintStaff(C.staff);
   try {
     const r = await fetch(SB + "/rest/v1/rpc/public_staff", { method: "POST", headers: { apikey: SK, "Content-Type": "application/json" }, body: "{}", cache: "no-store" });
     if (!r.ok) return; const j = await r.json();
-    const ok = x => x && typeof x.name === "string" && (/^https:\/\/(cdn|media)\.discordapp\.(com|net)\//.test(x.avatar || "") || /^data:image\/(jpeg|png|webp);base64,/.test(x.avatar || "") || /^https:\/\/[^ ]{4,400}$/.test(x.avatar || ""));
-    if (Array.isArray(j) && j.length) {
-      /* MERGE: staff from config.js always stay; the database updates matching people and ADDS new ones (adding staff never removes anyone). */
-      const key = n => String(n || "").trim().toLowerCase(), out = (C.staff || []).map(m => ({ ...m })), idx = new Map(out.map((m, i) => [key(m.name), i]));
-      j.forEach(x => { const m = { name: String(x.name || "Staff"), role: String(x.role || "Staff"), img: ok(x) ? x.avatar : "" }, i = idx.get(key(m.name));
-        if (i === undefined) { idx.set(key(m.name), out.length); out.push(m); } else out[i] = { name: out[i].name, role: m.role, img: m.img || out[i].img }; });
-      const R = ["owner", "co-owner", "admin", "administrator", "senior moderator", "lead moderator", "moderator", "helper"], rk = m => { const i = R.indexOf(String(m.role).toLowerCase()); return i < 0 ? 99 : Math.min(i, i === 3 ? 2 : i); };
-      paintStaff(out.map((m, i) => [m, i]).sort((a, b) => rk(a[0]) - rk(b[0]) || a[1] - b[1]).map(a => a[0]));
-    }
+    const ok = x => x && typeof x.name === "string" && /^https:\/\/(cdn|media)\.discordapp\.(com|net)\//.test(x.avatar || "");
+    if (Array.isArray(j) && j.length) paintStaff(j.map(x => ({ name: String(x.name || "Staff"), role: String(x.role || "Staff"), img: ok(x) ? x.avatar : "" })));
   } catch (e) {}
 })();
 $("#faq").innerHTML = C.faq.filter(Array.isArray).map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("");
