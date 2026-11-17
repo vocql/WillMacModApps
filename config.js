@@ -146,26 +146,30 @@ window.WM_CONFIG.types = [
     ]
   },
   {
-    id: "helper", title: "Helper", open: true, verb: "Apply as a helper",
-    blurb: "Welcome new members and answer questions in the server.",
-    lead: "Like helping people? Welcome new members, answer questions and point them to the right channels.",
-    note: "Helpers do not get moderation permissions. You must be friendly, patient and active.",
-    confirm: "I confirm everything I wrote is true and I will follow the server rules while helping.",
+  {
+    id: "ytmod", title: "YouTube Mode", open: true, verb: "Apply as a YouTube moderator",
+    blurb: "Help maintain a safe, welcoming and spoiler-free YouTube chat and comment section.",
+    lead: "YouTube Moderators uphold the community guidelines across our live chats and comment sections. They remove spam and spoilers, assist viewers and help keep every stream a positive experience.",
+    note: "YouTube Moderators only moderate on YouTube. Reliability, fairness and sound judgment are essential, and the role may be revoked in cases of misconduct or abuse of permissions.",
+    confirm: "I confirm that all information provided is accurate, and that I will follow the community guidelines and act professionally if accepted.",
     requirements: [
-      "Must be a member of the server for 1+ month.",
-      "Must know the rules and channels well.",
-      "Must be friendly, patient and active."
+      "Must have been a member of the server for at least 1 month.",
+      "Must have an active YouTube account in good standing.",
+      "Must be available to moderate during live streams and premieres.",
+      "Must demonstrate maturity, fairness and professionalism."
     ],
     questions: [
-      { label: "What is your Discord name?", hint: "(e.g. WillMacGTA)", short: "Discord name", type: "text", max: 60, tip: "So we know who to contact." },
-      { label: "Why do you want to be a helper?", short: "Why helper?", type: "area", max: 1000, tip: "Tell us what drives you. Specific reasons beat generic ones." },
-      { label: "How active are you on Discord every day?", short: "Daily activity", type: "area", max: 1000, tip: "Roughly which hours and how many per day." },
-      { label: "A new member asks something that is already in the rules. What do you say?", short: "New member question", type: "area", max: 1000, tip: "Write the reply you would actually send." },
-      { label: "What would you do if someone is rude to a new member?", short: "Rude member", type: "area", max: 1000, tip: "Remember helpers can't ban. Who do you tell, and when?" },
-      { label: "Anything else we should know?", short: "Anything else", type: "area", max: 1000, tip: "Past experience helping in servers, languages you speak, etc." }
+      { label: "What is your Discord username?", hint: "(e.g. WillMacGTA)", short: "Discord name", type: "text", max: 60, tip: "This is how our team will contact you." },
+      { label: "What is your YouTube channel name or handle?", hint: "(e.g. @WillMacGTA)", short: "YouTube channel", type: "text", max: 80, tip: "The account you would use to moderate." },
+      { label: "Why are you interested in becoming a YouTube Moderator?", short: "Motivation", type: "area", max: 1000, tip: "Be specific about what motivates you and what you can contribute." },
+      { label: "What is your availability for moderating?", short: "Availability", type: "area", max: 1000, tip: "Include your time zone, typical active hours and whether you can attend live streams and premieres." },
+      { label: "Describe any previous moderation experience.", hint: "(YouTube, Twitch, Discord or other platforms)", short: "Experience", type: "area", max: 1000, tip: "If you have none, say so. Prior experience is not required." },
+      { label: "A viewer is spamming links and insulting others in the live chat. How do you respond?", short: "Spam scenario", type: "area", max: 1000, tip: "Describe the actions you would take, in order." },
+      { label: "A viewer posts a major GTA VI spoiler in the chat. How do you respond?", short: "Spoiler scenario", type: "area", max: 1000, tip: "Consider the message, the user and the rest of the audience." },
+      { label: "A friend of yours violates the chat rules. How do you handle it?", short: "Conflict of interest", type: "area", max: 1000, tip: "We value impartiality and consistent enforcement." },
+      { label: "Is there anything else you would like us to know?", short: "Additional information", type: "area", max: 1000, tip: "Relevant skills, languages spoken or anything else that supports your application." }
     ]
-  }
-];
+  },
 
 // ============ APPEALS ============
 // Appeals are an application type. ONE staff member (Moderator, Lead or Admin) reviews each appeal. No voting.
